@@ -22,5 +22,32 @@ plot(RRlineal$x,RRlineal$y,type='l')
 
 #end-interpolacion
 
-fftRRLineal = fft(RRlineal)
-plot(Mod(fftRRLineal),type='l')
+#begin-mean-decomposition
+
+RRlinealMean <- mean(RRlineal$y)
+print(RRlinealMean)
+
+for (j in 1:Nmuestreo)
+{
+	RRlineal$y[j] <- RRlineal$y[j] - RRlinealMean
+}
+
+#end-mean-decomposition
+
+fftRRLineal = fft(RRlineal$y)
+#plot(RRlineal$x,RRlineal$y,type='l')
+#plot(Mod(fftRRLineal),type='l')
+
+#begin-HF-filter
+
+HFFilter = rep(1,Nmuestreo)
+HFFilter[1:Nmuestreo-1] = 0
+
+filteredFFT = fftRRLineal*HFFilter
+
+#begin-HF-filter
+
+plot(Mod(filteredFFT),type='l')
+
+RRLinealFiltered = Re(fft(filteredFFT ,inverse=TRUE)/Nmuestreo)
+plot(RRlineal$x,RRLinealFiltered,type='l')
