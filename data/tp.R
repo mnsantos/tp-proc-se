@@ -20,12 +20,14 @@ RRlineal = approx(time,RR,n=Nmuestreo)
 
 plot(RRlineal$x,RRlineal$y,type='l')
 
+RRLinealOriginal = RRlineal$y
+
 #end-interpolacion
 
 #begin-mean-decomposition
 
 RRlinealMean <- mean(RRlineal$y)
-print(RRlinealMean)
+RRLinealMeanFunction = rep(RRlinealMean,Nmuestreo)
 
 for (j in 1:Nmuestreo)
 {
@@ -52,14 +54,14 @@ filteredFFT = fftRRLineal*HFFilter
 RRLinealFiltered = Re(fft(filteredFFT ,inverse=TRUE)/Nmuestreo)
 plot(RRlineal$x,RRLinealFiltered,type='l')
 
-RRLinealDecomposed = (RRlinealOriginal - RRlinealMeanFunction)
+RRLinealDecomposed = (RRLinealOriginal - RRLinealMeanFunction)
 for (j in 1:Nmuestreo)
 {
 	RRLinealDecomposed[j] <- RRLinealDecomposed[j] - RRLinealFiltered[j]
 }
 
 op <- par(mfrow = c(2,2))
-plot(RRlineal$x,RRlinealOriginal,type='l')
-plot(RRlineal$x,RRlinealMeanFunction,type='l')
+plot(RRlineal$x,RRLinealOriginal,type='l')
+plot(RRlineal$x,RRLinealMeanFunction,type='l')
 plot(RRlineal$x,RRLinealFiltered,type='l')
 plot(RRlineal$x,RRLinealDecomposed,type='l')
