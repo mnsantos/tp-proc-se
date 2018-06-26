@@ -137,3 +137,18 @@ for (j in 1:Nmuestreo)
 
 op <- par(mfrow = c(1,1))
 plot(RRlineal$x,RRLinealDecomposed3,type='l')
+
+EHF = 0
+for (j in 1:length(HFFunction)){
+	EHF = EHF + HFFunction[j]**2
+}
+EHF = EHF * DeltaF
+
+ELF = 0
+for (j in 1:length(LFFunction)){
+	ELF = ELF + LFFunction[j]**2
+}
+ELF = ELF * DeltaF
+
+print(paste('EHF =',EHF))
+print(paste('ELF =',ELF))
