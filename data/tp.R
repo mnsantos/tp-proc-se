@@ -6,137 +6,101 @@ plot(time,RR,type='l')
 #################begin-interpolacion
 
 N = length(time)
-print(paste('N =',N))
 
-for (j in 1:N)
-{
-	abline (v=time[j], lty=2)
-}
-Nmuestreo = as.integer(4*max(time))
-print(paste('NM =',Nmuestreo))
+NUniforme = as.integer(4*max(time))
+print(paste('NM =',NUniforme))
 
-RRlineal = approx(time,RR,n=Nmuestreo)
-
-plot(RRlineal$x,RRlineal$y,type='l')
-
-RRLinealOriginal = RRlineal$y
+InterpoladaLineal = approx(time,RR,n=NUniforme)
 
 #################end-interpolacion
 
 #################begin-mean-decomposition
 
-RRlinealMean <- mean(RRlineal$y)
-RRLinealMeanFunction = rep(RRlinealMean,Nmuestreo)
+InterpoladaLinealMean <- mean(InterpoladaLineal$y)
+#plot(InterpoladaLineal,type='l',xlab="Time",ylab="RR")
+#abline(h=InterpoladaLinealMean,color="blue")
+InterpoladaLinealMeanFunction = rep(InterpoladaLinealMean,NUniforme)
 
-for (j in 1:Nmuestreo)
-{
-	RRlineal$y[j] <- RRlineal$y[j] - RRlinealMean
-}
+#for (j in 1:NUniforme)
+#{
+#	InterpoladaLineal$y[j] <- InterpoladaLineal$y[j] - InterpoladaLinealMean
+#}
+InterpoladaLineal$y <- InterpoladaLineal$y - InterpoladaLinealMean
+plot(InterpoladaLineal,type='l')
 
 #################end-mean-decomposition
 
-fftRRLineal = fft(RRlineal$y)
-#################plot(RRlineal$x,RRlineal$y,type='l')
-plot(Mod(fftRRLineal),type='l')
-
 #################begin-DayNightFilter
 
-DayNightFilter = rep(1,Nmuestreo)
-DayNightFilter[2:Nmuestreo-1] = 0
+#DayNightFilter = rep(1,NUniforme)
+#DayNightFilter[2:NUniforme-1] = 0
 
-filteredFFT = fftRRLineal*DayNightFilter
+#filteredFFT = fftInterpoladaLineal*DayNightFilter
+
+#Means = rep(0,60)
+#Coefs = rep(0,60)
+#for (i in 1:60){
+#	Coef = i*500
+#	print(Coef)
+#	FiltroMediaMovil <- filter(InterpoladaLineal$y,rep(1/Coef,Coef), circular =TRUE)
+#	Temp <- InterpoladaLineal$y - FiltroMediaMovil
+#	Means[i] = mean(Temp)
+#	print(mean(Temp))
+#	Coefs[i] = Coef
+#}
+#plot(Coefs,Means,type='l')
+
+FiltroMediaMovil <- filter(InterpoladaLineal$y,rep(1/26000,26000), circular =TRUE)
+plot(FiltroMediaMovil,type='l',xlab="Time",ylab="RR")
+InterpoladaLineal$y <- InterpoladaLineal$y - FiltroMediaMovil
+
+plot(InterpoladaLineal,type='l',xlab="Time",ylab="RR")
+
 
 #################end-DayNightFilter
 
-outMA21 <- filter(RRlineal$y,rep(1/1024,1024), circular =TRUE)
-plot(RRlineal$x,outMA21,type='l')
+fftInterpoladaLineal = fft(InterpoladaLineal$y)
 
-#################plot(Mod(filteredFFT),type='l')
-
-RRLinealFiltered = Re(fft(filteredFFT ,inverse=TRUE)/Nmuestreo)
-plot(RRlineal$x,RRLinealFiltered,type='l')
-
-RRLinealDecomposed1 = (RRLinealOriginal - RRLinealMeanFunction)
-RRLinealDecomposed2 = RRLinealDecomposed1
-for (j in 1:Nmuestreo)
-{
-	RRLinealDecomposed2[j] <- RRLinealDecomposed2[j] - RRLinealFiltered[j]
-}
-
-op <- par(mfrow = c(2,2))
-plot(RRlineal$x,RRLinealOriginal,type='l')
-plot(RRlineal$x,RRLinealMeanFunction,type='l')
-plot(RRlineal$x,RRLinealFiltered,type='l')
-plot(RRlineal$x,RRLinealDecomposed2,type='l')
-
-op <- par(mfrow = c(1,1))
-plot(RRlineal$x,RRLinealDecomposed1,type='l')
-lines(RRlineal$x,RRLinealFiltered,col='red')
-
-DeltaT = RRlineal$x[2] - RRlineal$x[1]
+DeltaT = InterpoladaLineal$x[2] - InterpoladaLineal$x[1]
 FrecMuestreo = 1/DeltaT
-DeltaF = FrecMuestreo/Nmuestreo
+DeltaF = FrecMuestreo/NUniforme
 
-N1= 0.04/DeltaF
-N2= 0.15/DeltaF
-N3= 0.4/DeltaF
-
-print(DeltaT)
-print(DeltaF)
-print(FrecMuestreo)
-print(N1)
-print(N2)
-print(N3)
-
-for (i in 1:Nmuestreo)
-{
-	if(abs(RRlineal$x[i] - N1) < 0.1){
-		I1 = i
-		print(paste("I1= ",I1))
-	}
-	if(abs(RRlineal$x[i] - N2) < 0.1){
-		I2 = i
-		print(paste("I2= ",I2))
-	}
-	if(abs(RRlineal$x[i] - N3) < 0.1){
-		I3 = i
-		print(paste("I3= ",I3))
-	}
-}
+EjeX = 0:(length(Mod(fftInterpoladaLineal))-1)
+FrecX = DeltaF * EjeX
+plot(FrecX,Mod(fftInterpoladaLineal),type='l',xlim=c(0,0.5))
+abline(v=0.04,color="red")
+abline(v=0.15,color="red")
+abline(v=0.4,color="red")
 
 #################begin-LFFilter
 
-LFFilter = rep(0,Nmuestreo)
-LFFilter[I1:I2] = 1
+N1 = 0.04/DeltaF
+N2 = 0.15/DeltaF
+LFFilter = rep(0,length(EjeX))
+LFFilter[N1:N2] = 1
 
-LFfilteredFFT = fftRRLineal*LFFilter
+LFfilteredFFT = fftInterpoladaLineal*LFFilter
 
-LFFunction = Re(fft(LFfilteredFFT ,inverse=TRUE)/Nmuestreo)
+LFFunction = Re(fft(LFfilteredFFT ,inverse=TRUE)/NUniforme)
+plot(InterpoladaLineal$x,LFFunction,type='l')
 
 #################end-LFFilter
 
 #################begin-HFFilter
+N3 = 0.4/DeltaF
+HFFilter = rep(0,length(EjeX))
+HFFilter[N2:N3] = 1
 
-HFFilter = rep(0,Nmuestreo)
-HFFilter[I2:I3] = 1
-
-HFfilteredFFT = fftRRLineal*HFFilter
-HFFunction = Re(fft(HFfilteredFFT ,inverse=TRUE)/Nmuestreo)
+HFfilteredFFT = fftInterpoladaLineal*HFFilter
+HFFunction = Re(fft(HFfilteredFFT ,inverse=TRUE)/NUniforme)
+plot(InterpoladaLineal$x,HFFunction,type='l')
 
 #################end-HFFilter
 
 op <- par(mfrow = c(1,2))
-plot(RRlineal$x,LFFunction,type='l')
-plot(RRlineal$x,HFFunction,type='l')
+plot(InterpoladaLineal$x,LFFunction,type='l')
+plot(InterpoladaLineal$x,HFFunction,type='l')
 
-RRLinealDecomposed3 = RRLinealDecomposed1
-for (j in 1:Nmuestreo)
-{
-	RRLinealDecomposed3[j] <- (RRLinealDecomposed3[j] - HFFunction[j]) - LFFunction[j]
-}
-
-op <- par(mfrow = c(1,1))
-plot(RRlineal$x,RRLinealDecomposed3,type='l')
 
 EHF = 0
 for (j in 1:length(HFFunction)){
@@ -150,5 +114,5 @@ for (j in 1:length(LFFunction)){
 }
 ELF = ELF * DeltaF
 
-print(paste('EHF =',EHF))
-print(paste('ELF =',ELF))
+print(paste('EHF =',EHF)) #774.6
+print(paste('ELF =',ELF)) #1330.5
