@@ -1,4 +1,4 @@
-data=read.csv(paste( "C:/Users/alexander.szyrej/Desktop/Seniales/tp/tp-proc-se/data/10068.MIB.csv" ,sep=','))
+data=read.csv(paste( "./10068.MIB.csv" ,sep=','))
 print (names(data))
 attach(data)
 plot(time,RR,type='l')
